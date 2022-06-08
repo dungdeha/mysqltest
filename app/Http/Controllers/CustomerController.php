@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -45,7 +46,21 @@ class CustomerController extends Controller
      */
     public function update($id, Request $request) {
         $customer = Customer::find($id);
-        return $customer->update(['email' => 'dungdd@dehasoft.com']);
+        DB::beginTransaction();
+        try {
+            $customer->update(['email' => 'dungdd@dehasoft.com']);
+            DB::commit();
+            return response()->json([
+                'status' => true,
+                'data' => $customer
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'messages' => [$e->getMessage()]
+            ]);
+        }
     }
 
     /**
