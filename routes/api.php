@@ -19,3 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::resource('customer', \App\Http\Controllers\CustomerController::class);
+Route::post('customer/change/{id}', [\App\Http\Controllers\CustomerController::class, 'update']);

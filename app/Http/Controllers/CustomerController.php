@@ -29,12 +29,20 @@ class CustomerController extends Controller
      * Create customer
      *
      * @param Request $request
-     * @return void
+     * @return json
      */
     public function store(Request $request) {
-        $customer = new Customer();
+        DB::beginTransaction();
+        try {
+            DB::select('call customer_insert(?, ?, ?, ?)', $this->_getData($request));
+            DB::commit();
 
-        return $customer->create($this->_getData($request));
+            return $this->success();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return $this->fail($e->getMessage());
+        }
     }
 
     /**
@@ -42,24 +50,17 @@ class CustomerController extends Controller
      *
      * @param $id
      * @param Request $request
-     * @return void
+     * @return json
      */
     public function update($id, Request $request) {
-        $customer = Customer::find($id);
         DB::beginTransaction();
         try {
-            $customer->update(['email' => 'dungdd@dehasoft.com']);
+            DB::select('call customer_update(?, ?, ?, ?, ?)', $this->_getUpdateData($id, $request));
             DB::commit();
-            return response()->json([
-                'status' => true,
-                'data' => $customer
-            ]);
+            return $this->success();
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'messages' => [$e->getMessage()]
-            ]);
+            return $this->fail($e->getMessage());
         }
     }
 
@@ -71,10 +72,25 @@ class CustomerController extends Controller
      */
     private function _getData($request) {
         return [
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
+            $request->fullname,
+            $request->email,
+            $request->phone,
+            $request->address
+        ];
+    }
+
+    /**
+     * @param $id
+     * @param $request
+     * @return void
+     */
+    private function _getUpdateData($id, $request) {
+        return [
+            $id,
+            $request->fullname,
+            $request->email,
+            $request->phone,
+            $request->address
         ];
     }
 
@@ -82,10 +98,46 @@ class CustomerController extends Controller
      * Delete customer
      *
      * @param $id
-     * @return void
+     * @return json
      */
     public function destroy($id) {
-        $customer = Customer::find($id);
-        return $customer->forceDelete();
+        DB::beginTransaction();
+        try {
+            DB::select('call customer_delete(?)', [$id]);
+            DB::commit();
+            return $this->success();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->fail($e->getMessage());
+        }
     }
+
+    /**
+     * Response success
+     *
+     * @param $data
+     * @return JsonResponse
+     */
+    public function success($data = null)
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Response fail
+     *
+     * @param $message
+     * @return JsonResponse
+     */
+    public function fail($message)
+    {
+        return response()->json([
+            'status' => false,
+            'message' => [$message],
+        ]);
+    }
+
 }

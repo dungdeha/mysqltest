@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     {
         DB::listen(function ($query) {
             if (strpos($query->sql, 'customers')) {
-                Log::create(['content' => $query->sql]);
+//                Log::create(['content' => $query->sql]);
             }
         });
     }

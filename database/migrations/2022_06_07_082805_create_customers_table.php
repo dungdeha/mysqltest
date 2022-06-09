@@ -17,10 +17,9 @@ return new class extends Migration
             $table->id();
             $table->string('fullname', 50);
             $table->string('email', 50)->index();
-            $table->string('phone', 12)->nullable();
+            $table->string('phone', 20)->nullable();
             $table->string('address', 255)->nullable();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
